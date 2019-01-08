@@ -18,23 +18,13 @@ void setup()
 {
   M5.begin();
   ss.begin(GPSBaud);
-
-  // M5.Lcd.println(F("FullExample.ino"));
-  // M5.Lcd.println(F("An extensive example of many interesting TinyGPS++ features"));
-  // M5.Lcd.print(F("Testing TinyGPS++ library v. ")); M5.Lcd.println(TinyGPSPlus::libraryVersion());
-  // M5.Lcd.println(F("by Mikal Hart"));
-  // M5.Lcd.println();
-  //M5.Lcd.println(F("Sats HDOP Latitude   Longitude   Fix  Date       Time     Date Alt    Course Speed Card  Distance Course Card  Chars Sentences Checksum"));
-  //M5.Lcd.println(F("          (deg)      (deg)       Age                      Age  (m)    --- from GPS ----  ---- to London  ----  RX    RX        Fail"));
-  //M5.Lcd.println(F("---------------------------------------------------------------------------------------------------------------------------------------"));
 }
 
 void loop()
 {
   M5.Lcd.setCursor(0, 70);
   M5.Lcd.setTextColor(GREEN, BLACK);
-  static const double LONDON_LAT = 51.508131, LONDON_LON = -0.128002;
-
+  
   if (gps.satellites.isValid())
     M5.Lcd.println("SAT: " + String(gps.satellites.value()));//, , 5);
   if (gps.hdop.isValid())
@@ -58,26 +48,7 @@ void loop()
   
   //printStr(gps.course.isValid() ? TinyGPSPlus::cardinal(gps.course.deg()) : "*** ", 6);
 
-  /*unsigned long distanceKmToLondon =
-    (unsigned long)TinyGPSPlus::distanceBetween(
-      gps.location.lat(),
-      gps.location.lng(),
-      LONDON_LAT, 
-      LONDON_LON) / 1000;
-  printInt(distanceKmToLondon, gps.location.isValid(), 9);
-
-  double courseToLondon =
-    TinyGPSPlus::courseTo(
-      gps.location.lat(),
-      gps.location.lng(),
-      LONDON_LAT, 
-      LONDON_LON);
-
-  printFloat(courseToLondon, gps.location.isValid(), 7, 2);
-
-  const char *cardinalToLondon = TinyGPSPlus::cardinal(courseToLondon);
-
-  printStr(gps.location.isValid() ? cardinalToLondon : "*** ", 6);
+  /*
 
   printInt(gps.charsProcessed(), true, 6);
   printInt(gps.sentencesWithFix(), true, 10);

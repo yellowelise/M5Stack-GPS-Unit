@@ -10,9 +10,19 @@ HardwareSerial ss(2);
 // For stats that happen every 5 seconds
 unsigned long last = 0UL;
 
+
+
+  char filename[] = "/LOGGER00.CSV";
+
+ File logfile;
+
+ 
 void setup()
 {
+ 
   M5.begin();
+  Wire.begin();
+    
   M5.Lcd.setTextColor(GREEN, BLACK);
   ss.begin(GPSBaud);
 
@@ -21,6 +31,16 @@ void setup()
   M5.Lcd.print(F("Testing TinyGPS++ library v. ")); M5.Lcd.println(TinyGPSPlus::libraryVersion());
   M5.Lcd.println(F(""));
   M5.Lcd.println();
+  Serial.begin(115200);
+
+ logfile = SD.open(filename, FILE_WRITE); 
+ if (!logfile) {
+        Serial.println("Failed to open file for writing");
+       // return;
+      }
+ else
+    Serial.println("SUCCESS to open file for writing");
+        
 }
 
 void loop()
@@ -51,6 +71,19 @@ void loop()
 //    M5.Lcd.print(gps.location.lat(), 6);
 //    M5.Lcd.print(F(" Long="));
 //    M5.Lcd.println(gps.location.lng(), 6);
+
+       
+///       logfile.close();
+
+  if (SD.exists(filename)) {
+    Serial.println("LOGGER00.CSV exists.");
+    if (logfile.print(gps.location.lat(),6)) {
+        Serial.println("File written");
+      } else {
+        Serial.println("Write failed");
+      }
+
+  }
   }
 
  if (gps.date.isUpdated())

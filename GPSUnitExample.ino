@@ -13,10 +13,28 @@ unsigned long last = 0UL;
 
 
   char filename[] = "/LOGGER00.CSV";
+  String dataToWrite = "";
 
+  
  File logfile;
 
- 
+
+void saveData()
+{
+if(SD.exists(filename)){ // check the card is still there
+// now append new data file
+logfile = SD.open(filename, FILE_WRITE);
+if (logfile){
+logfile.println(dataToWrite);
+logfile.close(); // close the file
+}
+}
+else{
+Serial.println("Error writing to file !");
+}
+}
+
+
 void setup()
 {
  
@@ -33,13 +51,6 @@ void setup()
   M5.Lcd.println();
   Serial.begin(115200);
 
- logfile = SD.open(filename, FILE_WRITE); 
- if (!logfile) {
-        Serial.println("Failed to open file for writing");
-       // return;
-      }
- else
-    Serial.println("SUCCESS to open file for writing");
         
 }
 
@@ -72,18 +83,18 @@ void loop()
 //    M5.Lcd.print(F(" Long="));
 //    M5.Lcd.println(gps.location.lng(), 6);
 
+    M5.Lcd.setCursor(0, 150);
+    M5.Lcd.print(F("LAT: "));
+    M5.Lcd.print(gps.location.lat(), 6);
+    M5.Lcd.print(F(" - LNG: "));
+    M5.Lcd.println(gps.location.lng(), 6);
+
        
 ///       logfile.close();
-
-  if (SD.exists(filename)) {
-    Serial.println("LOGGER00.CSV exists.");
-    if (logfile.print(gps.location.lat(),6)) {
-        Serial.println("File written");
-      } else {
-        Serial.println("Write failed");
-      }
-
-  }
+    dataToWrite = String(gps.date.year()) + "/"+ String(gps.date.month()) + "/" + String(gps.date.day()) + "," + String(gps.time.hour()) + ":"+String(gps.time.minute()) + ":" + String(gps.time.second()) + "." + String(gps.time.centisecond()) + ","  + String(gps.location.lat()) + "," + String(gps.location.lng());
+    M5.Lcd.setCursor(0, 190);
+    M5.Lcd.println(dataToWrite);
+    saveData();
   }
 
  if (gps.date.isUpdated())
@@ -181,16 +192,18 @@ void loop()
 //    M5.Lcd.print(F(" hdop="));
     M5.Lcd.println(gps.hdop.hdop());
   }
-  if (gps.location.isValid())
+
+  
+/*  if (gps.location.isValid())
   {
-     M5.Lcd.setCursor(0, 150);
+    M5.Lcd.setCursor(0, 150);
     M5.Lcd.print(F("LAT: "));
     M5.Lcd.print(gps.location.lat(), 6);
     M5.Lcd.print(F(" - LNG: "));
     M5.Lcd.println(gps.location.lng(), 6);
 
   }
-
+*/
  if (millis() - last > 5000)
   {
      M5.Lcd.setCursor(0, 160);

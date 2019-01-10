@@ -1,6 +1,8 @@
 #include <M5Stack.h>
 #include <TinyGPS++.h>
 static const uint32_t GPSBaud = 9600;
+#define M5STACKFIRE_SPEAKER_PIN 25 // speaker DAC, only 8 Bit
+
 TinyGPSPlus gps;
 
 // The serial connection to the GPS device
@@ -39,6 +41,7 @@ void setup()
 {
  
   M5.begin();
+  dacWrite(M5STACKFIRE_SPEAKER_PIN, 0); // make sure that the speaker is quite
   Wire.begin();
     
   M5.Lcd.setTextColor(GREEN, BLACK);
@@ -61,7 +64,7 @@ void loop()
   // Dispatch incoming characters
   while (ss.available() > 0)
     gps.encode(ss.read());
-
+  
 
   if (gps.location.isUpdated())
   {
@@ -91,7 +94,7 @@ void loop()
 
        
 ///       logfile.close();
-    dataToWrite = String(gps.date.year()) + "/"+ String(gps.date.month()) + "/" + String(gps.date.day()) + "," + String(gps.time.hour()) + ":"+String(gps.time.minute()) + ":" + String(gps.time.second()) + "." + String(gps.time.centisecond()) + ","  + String(gps.location.lat()) + "," + String(gps.location.lng());
+    dataToWrite = String(gps.date.year()) + "/"+ String(gps.date.month()) + "/" + String(gps.date.day()) + "," + String(gps.time.hour()) + ":"+String(gps.time.minute()) + ":" + String(gps.time.second()) + "." + String(gps.time.centisecond()) + ","  + String(gps.location.lat(),6) + "," + String(gps.location.lng(),6) + "," + String(gps.hdop.hdop()) + "," + String(gps.course.deg()) + "," + String(gps.speed.kmph()) +","+String(gps.altitude.meters());
     M5.Lcd.setCursor(0, 190);
     M5.Lcd.println(dataToWrite);
     saveData();
@@ -206,7 +209,22 @@ void loop()
 */
  if (millis() - last > 5000)
   {
-     M5.Lcd.setCursor(0, 160);
+    if (ss.available() == 0)
+    {
+       ss.begin(GPSBaud);
+       M5.Lcd.setCursor(0, 220);
+       M5.Lcd.print(F("Reconnect TRY!"));
+    }
+   else 
+    {
+       M5.Lcd.setCursor(0, 220);
+       M5.Lcd.print(F("              "));
+      
+    }
+  }
+ if (millis() - last > 5000)
+  {
+     M5.Lcd.setCursor(0, 180);
     M5.Lcd.print(F("DIAGS Chars: "));
     M5.Lcd.print(gps.charsProcessed());
     M5.Lcd.print(F(" Sentences-with-Fix: "));

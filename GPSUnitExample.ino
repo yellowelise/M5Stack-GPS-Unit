@@ -1,8 +1,8 @@
 #include <M5Stack.h>
 #include <TinyGPS++.h>
-static const uint32_t GPSBaud = 9600;
 #define M5STACKFIRE_SPEAKER_PIN 25 // speaker DAC, only 8 Bit
 
+static const uint32_t GPSBaud = 57600;
 TinyGPSPlus gps;
 
 // The serial connection to the GPS device
@@ -25,13 +25,21 @@ void saveData()
 {
 if(SD.exists(filename)){ // check the card is still there
 // now append new data file
-logfile = SD.open(filename, FILE_WRITE);
+logfile = SD.open(filename, FILE_APPEND );
 if (logfile){
 logfile.println(dataToWrite);
 logfile.close(); // close the file
+
 }
 }
 else{
+  logfile = SD.open(filename, FILE_WRITE );
+if (logfile){
+logfile.println("DATE,LAT,LNG,HDOP,COURSE,SPEED,ALTITUDE");
+logfile.println(dataToWrite);
+logfile.close(); // close the file
+
+}
 Serial.println("Error writing to file !");
 }
 }
@@ -42,10 +50,17 @@ void setup()
  
   M5.begin();
   dacWrite(M5STACKFIRE_SPEAKER_PIN, 0); // make sure that the speaker is quite
-  Wire.begin();
-    
+  Wire.begin();    
+  
   M5.Lcd.setTextColor(GREEN, BLACK);
   ss.begin(GPSBaud);
+ /* ss.write("$PCAS01,5*19");
+  delay(200);
+  ss.flush();
+  ss.end();
+  ss.begin(115200);
+  */
+  // 2hz ss.println("$PCAS02,500*1A");
 
   M5.Lcd.println(F("GPSUnitExample.ino"));
   M5.Lcd.println(F("Based on TinyGPS++ KitchenSink.ino (by Mikal Hart)"));
@@ -64,7 +79,6 @@ void loop()
   // Dispatch incoming characters
   while (ss.available() > 0)
     gps.encode(ss.read());
-  
 
   if (gps.location.isUpdated())
   {
@@ -94,7 +108,7 @@ void loop()
 
        
 ///       logfile.close();
-    dataToWrite = String(gps.date.year()) + "/"+ String(gps.date.month()) + "/" + String(gps.date.day()) + "," + String(gps.time.hour()) + ":"+String(gps.time.minute()) + ":" + String(gps.time.second()) + "." + String(gps.time.centisecond()) + ","  + String(gps.location.lat(),6) + "," + String(gps.location.lng(),6) + "," + String(gps.hdop.hdop()) + "," + String(gps.course.deg()) + "," + String(gps.speed.kmph()) +","+String(gps.altitude.meters());
+    dataToWrite = String(gps.date.year()) + "-"+ String(gps.date.month(),2) + "-" + String(gps.date.day(),2) + " " + String(gps.time.hour(),2) + ":"+String(gps.time.minute(),2) + ":" + String(gps.time.second(),2) + "." + String(gps.time.centisecond(),3) + "," + String(gps.location.lat(),6) + "," + String(gps.location.lng(),6) + "," + String(gps.hdop.hdop()) + "," + String(gps.course.deg()) + "," + String(gps.speed.kmph()) +","+String(gps.altitude.meters());
     M5.Lcd.setCursor(0, 190);
     M5.Lcd.println(dataToWrite);
     saveData();
@@ -209,24 +223,11 @@ void loop()
 */
  if (millis() - last > 5000)
   {
-    if (ss.available() == 0)
-    {
-       ss.begin(GPSBaud);
-       M5.Lcd.setCursor(0, 220);
-       M5.Lcd.print(F("Reconnect TRY!"));
-    }
-   else 
-    {
-       M5.Lcd.setCursor(0, 220);
-       M5.Lcd.print(F("              "));
-      
-    }
-  }
- if (millis() - last > 5000)
-  {
-     M5.Lcd.setCursor(0, 180);
+     M5.Lcd.setCursor(0, 160);
     M5.Lcd.print(F("DIAGS Chars: "));
     M5.Lcd.print(gps.charsProcessed());
+    Serial.println(gps.charsProcessed());
+
     M5.Lcd.print(F(" Sentences-with-Fix: "));
     M5.Lcd.print(gps.sentencesWithFix());
     M5.Lcd.print(F(" Failed-checksum: "));

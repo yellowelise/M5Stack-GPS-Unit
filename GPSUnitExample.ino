@@ -73,6 +73,9 @@ void setup()
   M5.Lcd.println(F("Set Receiver to Automotive..."));
   ss.println("$PCAS11,3*1E");
 
+  M5.Lcd.println(F("Set Reboot to HOT..."));
+  ss.println("$PCAS10,0*1C");
+
 
   M5.Lcd.println(F("Inizialization terminated."));
 

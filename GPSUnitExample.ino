@@ -2,7 +2,7 @@
 #include <TinyGPS++.h>
 #define M5STACKFIRE_SPEAKER_PIN 25 // speaker DAC, only 8 Bit
 
-static const uint32_t GPSBaud = 57600;
+static const uint32_t GPSBaud = 9600;
 TinyGPSPlus gps;
 
 // The serial connection to the GPS device
@@ -23,12 +23,15 @@ unsigned long last = 0UL;
 
 void saveData()
 {
+if (dataToWrite != "")
+{  
 if(SD.exists(filename)){ // check the card is still there
 // now append new data file
 logfile = SD.open(filename, FILE_APPEND );
 if (logfile){
 logfile.println(dataToWrite);
 logfile.close(); // close the file
+dataToWrite = "";
 
 }
 }
@@ -38,12 +41,13 @@ if (logfile){
 logfile.println("DATE,LAT,LNG,HDOP,COURSE,SPEED,ALTITUDE");
 logfile.println(dataToWrite);
 logfile.close(); // close the file
+dataToWrite = "";
 
 }
 Serial.println("Error writing to file !");
 }
 }
-
+}
 
 void setup()
 {
@@ -54,7 +58,25 @@ void setup()
   
   M5.Lcd.setTextColor(GREEN, BLACK);
   ss.begin(GPSBaud);
- /* ss.write("$PCAS01,5*19");
+  M5.Lcd.println(F("Set Baud to 57600..."));
+  ss.println("$PCAS01,4*18");
+  ss.flush();
+  ss.begin(57600);
+  
+  M5.Lcd.println(F("Set Frequency to 10Hz..."));
+  ss.println("$PCAS02,100*1E");
+
+  M5.Lcd.println(F("Set Costellation to GPS,BDS,GLONASS..."));
+  ss.println("$PCAS04,7*1E");
+
+  
+  M5.Lcd.println(F("Set Receiver to Automotive..."));
+  ss.println("$PCAS11,3*1E");
+
+
+  M5.Lcd.println(F("Inizialization terminated."));
+
+   /* ss.write("$PCAS01,5*19");
   delay(200);
   ss.flush();
   ss.end();
@@ -62,11 +84,12 @@ void setup()
   */
   // 2hz ss.println("$PCAS02,500*1A");
 
-  M5.Lcd.println(F("GPSUnitExample.ino"));
+/*  M5.Lcd.println(F("GPSUnitExample.ino"));
   M5.Lcd.println(F("Based on TinyGPS++ KitchenSink.ino (by Mikal Hart)"));
   M5.Lcd.print(F("Testing TinyGPS++ library v. ")); M5.Lcd.println(TinyGPSPlus::libraryVersion());
   M5.Lcd.println(F(""));
   M5.Lcd.println();
+*/
   Serial.begin(115200);
 
         
@@ -78,8 +101,11 @@ void loop()
  
   // Dispatch incoming characters
   while (ss.available() > 0)
-    gps.encode(ss.read());
-
+  {
+    int ch = ss.read();
+    Serial.write(ch);
+    gps.encode(ch);
+  }
   if (gps.location.isUpdated())
   {
     M5.Lcd.setCursor(0, 70);
@@ -108,10 +134,11 @@ void loop()
 
        
 ///       logfile.close();
-    dataToWrite = String(gps.date.year()) + "-"+ String(gps.date.month(),2) + "-" + String(gps.date.day(),2) + " " + String(gps.time.hour(),2) + ":"+String(gps.time.minute(),2) + ":" + String(gps.time.second(),2) + "." + String(gps.time.centisecond(),3) + "," + String(gps.location.lat(),6) + "," + String(gps.location.lng(),6) + "," + String(gps.hdop.hdop()) + "," + String(gps.course.deg()) + "," + String(gps.speed.kmph()) +","+String(gps.altitude.meters());
+    dataToWrite = String(gps.date.year()) + "-"+ printf("%02d", gps.date.month())+ "-" + printf("%02d", gps.date.day()) + " " + printf("%02d", gps.time.hour()) + ":"+printf("%02d", gps.time.minute()) + ":" + printf("%02d", gps.time.second()) + "." + printf("%03d", gps.time.centisecond()) + "," + String(gps.location.lat(),6) + "," + String(gps.location.lng(),6) + "," + String(gps.hdop.hdop()) + "," + String(gps.course.deg()) + "," + String(gps.speed.kmph()) +","+String(gps.altitude.meters());
     M5.Lcd.setCursor(0, 190);
     M5.Lcd.println(dataToWrite);
     saveData();
+    
   }
 
  if (gps.date.isUpdated())

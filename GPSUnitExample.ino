@@ -134,7 +134,11 @@ void loop()
 
        
 ///       logfile.close();
-    dataToWrite = String(gps.date.year()) + "-"+ printf("%02d", gps.date.month())+ "-" + printf("%02d", gps.date.day()) + " " + printf("%02d", gps.time.hour()) + ":"+printf("%02d", gps.time.minute()) + ":" + printf("%02d", gps.time.second()) + "." + printf("%03d", gps.time.centisecond()) + "," + String(gps.location.lat(),6) + "," + String(gps.location.lng(),6) + "," + String(gps.hdop.hdop()) + "," + String(gps.course.deg()) + "," + String(gps.speed.kmph()) +","+String(gps.altitude.meters());
+  static char str[30];
+  sprintf(str, "%04d-%02d-%02d %02d:%02d.%03d", String(gps.date.year()),String(gps.date.month()),String(gps.date.day()),String(gps.time.hour()),String(gps.time.minute()),String(gps.time.second()),String(gps.time.centisecond()));
+
+  
+    dataToWrite = String(str) + "," + String(gps.location.lat(),6) + "," + String(gps.location.lng(),6) + "," + String(gps.hdop.hdop()) + "," + String(gps.course.deg()) + "," + String(gps.speed.kmph()) +","+String(gps.altitude.meters());
     M5.Lcd.setCursor(0, 190);
     M5.Lcd.println(dataToWrite);
     saveData();

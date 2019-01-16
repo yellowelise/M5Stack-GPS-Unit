@@ -132,15 +132,13 @@ Serial.println("Error writing to file !");
 }
 }
 }
-void setup()
+
+
+void connectToGPS()
 {
- 
-  M5.begin();
-  dacWrite(M5STACKFIRE_SPEAKER_PIN, 0); // make sure that the speaker is quite
-  Wire.begin();    
+  M5.Lcd.clear();
   
-  M5.Lcd.setTextColor(GREEN, BLACK);
-  ss.begin(GPSBaud);
+ ss.begin(GPSBaud);
   delay(200);
   M5.Lcd.println(F("Set Baud to 57600..."));
   ss.println("$PCAS01,4*18");
@@ -167,7 +165,19 @@ void setup()
 
 
   M5.Lcd.println(F("Inizialization terminated."));
-  Serial.begin(115200);
+  Serial.begin(115200);  
+}
+
+
+void setup()
+{
+ 
+  M5.begin();
+  dacWrite(M5STACKFIRE_SPEAKER_PIN, 0); // make sure that the speaker is quite
+  Wire.begin();    
+  
+  M5.Lcd.setTextColor(GREEN, BLACK);
+ connectToGPS();
 }
 
 void loop()
@@ -181,6 +191,7 @@ void loop()
     Serial.write(ch);
     gps.encode(ch);
   }
+  
   if (gps.location.isUpdated())
   {
     M5.Lcd.setCursor(0, 70);
@@ -268,9 +279,11 @@ void loop()
     M5.Lcd.println(gps.passedChecksum());
 
     if (gps.charsProcessed() < 10)
+    {
+      connectToGPS();
       M5.Lcd.println(F("WARNING: No GPS data.  Check wiring."));
-
+    }
     last = millis();
-    M5.Lcd.println();
+   
   }
 }

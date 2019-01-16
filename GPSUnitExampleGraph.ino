@@ -141,21 +141,27 @@ void setup()
   
   M5.Lcd.setTextColor(GREEN, BLACK);
   ss.begin(GPSBaud);
+  delay(200);
   M5.Lcd.println(F("Set Baud to 57600..."));
   ss.println("$PCAS01,4*18");
-  ss.flush();
+  ss.end();
   ss.begin(57600);
+  delay(1000);
   
+  delay(250);
   M5.Lcd.println(F("Set Frequency to 10Hz..."));
   ss.println("$PCAS02,100*1E");
 
+  delay(250);
   M5.Lcd.println(F("Set Costellation to GPS,BDS,GLONASS..."));
   ss.println("$PCAS04,7*1E");
 
   
+  delay(250);
   M5.Lcd.println(F("Set Receiver to Automotive..."));
   ss.println("$PCAS11,3*1E");
 
+  delay(250);
   M5.Lcd.println(F("Set Reboot to HOT..."));
   ss.println("$PCAS10,0*1C");
 

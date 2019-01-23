@@ -1,8 +1,10 @@
+
+
 #include <M5Stack.h>
 #include <TinyGPS++.h>
 #define M5STACKFIRE_SPEAKER_PIN 25 // speaker DAC, only 8 Bit
 
-static const uint32_t GPSBaud = 9600;
+static const uint32_t GPSBaud = 57600;
 TinyGPSPlus gps;
 
 unsigned long rel_x,rel_y;
@@ -92,7 +94,7 @@ dataToWrite = "";
 else{
   logfile = SD.open(filename, FILE_WRITE );
 if (logfile){
-logfile.println("DATE,TIME,LAT,LNG,HDOP,COURSE,SPEED,ALTITUDE");
+logfile.println("DATE,TIME,AGE,LAT,LNG,HDOP,COURSE,SPEED,ALTITUDE,SAT");
 logfile.println(dataToWrite);
 logfile.close(); // close the file
 dataToWrite = "";
@@ -136,15 +138,20 @@ Serial.println("Error writing to file !");
 
 void connectToGPS()
 {
+  Serial.begin(115200);  
+
   M5.Lcd.clear();
   
- ss.begin(GPSBaud);
-  delay(200);
+  ss.begin(GPSBaud);
+  delay(2000);
   M5.Lcd.println(F("Set Baud to 57600..."));
-  ss.println("$PCAS01,4*18");
-  ss.end();
-  ss.begin(57600);
-  delay(1000);
+  //ss.println("$PCAS01,4*18");//57600
+ // ss.println("$PCAS01,3*1F");//38400
+  //ss.updateBaudRate(57600);
+  //delay(5);
+  //ss.end();
+  //delay(2000);
+  //ss.begin(57600);
   
   delay(250);
   M5.Lcd.println(F("Set Frequency to 10Hz..."));
@@ -165,7 +172,6 @@ void connectToGPS()
 
 
   M5.Lcd.println(F("Inizialization terminated."));
-  Serial.begin(115200);  
 }
 
 
@@ -173,11 +179,11 @@ void setup()
 {
  
   M5.begin();
-  dacWrite(M5STACKFIRE_SPEAKER_PIN, 0); // make sure that the speaker is quite
-  Wire.begin();    
-  
+//  dacWrite(M5STACKFIRE_SPEAKER_PIN, 0); // make sure that the speaker is quite
+//  Wire.begin();    
+ connectToGPS();  
   M5.Lcd.setTextColor(GREEN, BLACK);
- connectToGPS();
+
 }
 
 void loop()
@@ -192,7 +198,7 @@ void loop()
     gps.encode(ch);
   }
   
-  if (gps.location.isUpdated())
+  if (gps.location.isValid())
   {
     M5.Lcd.setCursor(0, 70);
     M5.Lcd.print(F("LOCATION  Fix Age: "));
@@ -208,7 +214,7 @@ void loop()
     //sprintf(str, "%04d-%02d-%02d %02d:%02d.%03d", String(gps.date.year()),String(gps.date.month()),String(gps.date.day()),String(gps.time.hour()),String(gps.time.minute()),String(gps.time.second()),String(gps.time.centisecond()));
     //dataToWrite = String(str) + "," + String(gps.location.lat(),6) + "," + String(gps.location.lng(),6) + "," + String(gps.hdop.hdop()) + "," + String(gps.course.deg()) + "," + String(gps.speed.kmph()) +","+String(gps.altitude.meters());
 
-    dataToWrite = String(gps.date.value())+","+String(gps.time.value()) + "," + String(gps.location.lat(),6) + "," + String(gps.location.lng(),6) + "," + String(gps.hdop.hdop()) + "," + String(gps.course.deg()) + "," + String(gps.speed.kmph()) +","+String(gps.altitude.meters());
+    dataToWrite = String(gps.date.value())+","+String(gps.time.value()) + ","+String(gps.location.age())+"," + String(gps.location.lat(),6) + "," + String(gps.location.lng(),6) + "," + String(gps.hdop.hdop()) + "," + String(gps.course.deg()) + "," + String(gps.speed.kmph()) +","+String(gps.altitude.meters())+","+String(gps.satellites.value());
     M5.Lcd.setCursor(0, 190);
     M5.Lcd.println(dataToWrite);
     saveData();

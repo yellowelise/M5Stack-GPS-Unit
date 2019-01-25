@@ -1,10 +1,9 @@
-
-
 #include <M5Stack.h>
 #include <TinyGPS++.h>
 #define M5STACKFIRE_SPEAKER_PIN 25 // speaker DAC, only 8 Bit
+#include "Array.h"
 
-static const uint32_t GPSBaud = 57600;
+static const uint32_t GPSBaud = 9600;
 TinyGPSPlus gps;
 
 unsigned long rel_x,rel_y;
@@ -12,7 +11,11 @@ unsigned int rec_w,rec_h;
 unsigned long min_x,max_x,min_y,max_y=0;
 
 
-
+const byte size = 10;
+byte Index =0;
+float rawVel[size] = {0,0,0,0,0,0,0,0,0,0};
+float rawLat[size] = {0,0,0,0,0,0,0,0,0,0};
+float rawLng[size] = {0,0,0,0,0,0,0,0,0,0};
 
 // The serial connection to the GPS device
 HardwareSerial ss(2);
@@ -94,7 +97,7 @@ dataToWrite = "";
 else{
   logfile = SD.open(filename, FILE_WRITE );
 if (logfile){
-logfile.println("DATE,TIME,AGE,LAT,LNG,HDOP,COURSE,SPEED,ALTITUDE,SAT");
+logfile.println("DATE,TIME,AGE,LAT,LATM,LNG,LNGM,HDOP,COURSE,SPEED,SPEEDM,ALTITUDE,SAT");
 logfile.println(dataToWrite);
 logfile.close(); // close the file
 dataToWrite = "";
@@ -143,9 +146,16 @@ void connectToGPS()
   M5.Lcd.clear();
   
   ss.begin(GPSBaud);
-  delay(2000);
+  delay(1000);
   M5.Lcd.println(F("Set Baud to 57600..."));
-  //ss.println("$PCAS01,4*18");//57600
+  ss.println("$PCAS01,4*18");//57600
+  delay(1000);
+  ss.flush(); 
+  delay(1000);
+  ss.end();
+  delay(1000);
+  ss.begin(57600);
+  delay(1000);
  // ss.println("$PCAS01,3*1F");//38400
   //ss.updateBaudRate(57600);
   //delay(5);
@@ -183,13 +193,24 @@ void setup()
 //  Wire.begin();    
  connectToGPS();  
   M5.Lcd.setTextColor(GREEN, BLACK);
+  //M5.powerOFF();
 
 }
 
 void loop()
 {
-  //M5.Lcd.clear();
- 
+/*  uint8_t data;
+  Wire.beginTransmission(IP5306_ADDR);
+  Wire.write(IP5306_REG_READ1);
+  Wire.endTransmission(false);
+  Wire.requestFrom(IP5306_ADDR, 1);
+  data = Wire.read();
+  M5.Lcd.setCursor(250, 150);
+    M5.Lcd.print(String(data));
+*/
+  M5.update();  
+  if (M5.BtnA.pressedFor(700))
+    M5.powerOFF();
   // Dispatch incoming characters
   while (ss.available() > 0)
   {
@@ -213,8 +234,19 @@ void loop()
     //static char str[50];
     //sprintf(str, "%04d-%02d-%02d %02d:%02d.%03d", String(gps.date.year()),String(gps.date.month()),String(gps.date.day()),String(gps.time.hour()),String(gps.time.minute()),String(gps.time.second()),String(gps.time.centisecond()));
     //dataToWrite = String(str) + "," + String(gps.location.lat(),6) + "," + String(gps.location.lng(),6) + "," + String(gps.hdop.hdop()) + "," + String(gps.course.deg()) + "," + String(gps.speed.kmph()) +","+String(gps.altitude.meters());
+    Index++;
+    if (Index>=size)
+      Index = 0;
 
-    dataToWrite = String(gps.date.value())+","+String(gps.time.value()) + ","+String(gps.location.age())+"," + String(gps.location.lat(),6) + "," + String(gps.location.lng(),6) + "," + String(gps.hdop.hdop()) + "," + String(gps.course.deg()) + "," + String(gps.speed.kmph()) +","+String(gps.altitude.meters())+","+String(gps.satellites.value());
+    rawVel[Index] =  gps.speed.kmph();
+    rawLat[Index] =  gps.location.lat();
+    rawLng[Index] =  gps.location.lng();
+    
+    Array<float> velocity = Array<float>(rawVel,size);
+    Array<float> latitude = Array<float>(rawLat,size);
+    Array<float> longitude = Array<float>(rawLng,size);
+     
+    dataToWrite = String(gps.date.value())+","+String(gps.time.value()) + ","+String(gps.location.age())+"," + String(gps.location.lat(),6) +"," + String(latitude.getAverage(),6) + "," + String(gps.location.lng(),6) + "," + String(longitude.getAverage(),6) + "," + String(gps.hdop.hdop()) + "," + String(gps.course.deg()) + "," +String(gps.speed.kmph())+"," + String(velocity.getAverage()) +","+String(gps.altitude.meters())+","+String(gps.satellites.value());
     M5.Lcd.setCursor(0, 190);
     M5.Lcd.println(dataToWrite);
     saveData();
@@ -223,8 +255,8 @@ void loop()
     int YY = 0;
     coords_to_pixel(gps.location.lat(),gps.location.lng(),XX,YY);
     dataToWriteXY = String(gps.date.value())+","+String(gps.time.value()) + "," + String(XX) + "," + String(YY) + "," + String(gps.speed.kmph());
-    M5.Lcd.setCursor(0, 210);
-    M5.Lcd.println(dataToWriteXY);
+   // M5.Lcd.setCursor(0, 210);
+   // M5.Lcd.println(dataToWriteXY);
     saveDataXY();
     
     

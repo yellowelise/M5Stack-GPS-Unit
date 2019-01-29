@@ -4,9 +4,11 @@
 
 #define M5STACKFIRE_SPEAKER_PIN 25 // speaker DAC, only 8 Bit
 #include "Array.h"
-//41.93713,12.529524
-//41.9367835,12.5313038
-//fine viale tirreno
+// fine viale tirreno 41.93713,12.529524 -- 41.9367835,12.5313038
+// viale ionio 41.945960, 12.531180 -- 41.945481, 12.531126
+// via delle vigne nuove 41.952806, 12.535804 -- 41.952917, 12.536549
+// casa 41.969688, 12.532461 -- 41.969800, 12.532651
+
 
 static const uint32_t GPSBaud = 9600;
 TinyGPSPlus gps;
@@ -16,6 +18,10 @@ byte Index =0;
 float rawVel[size] = {0,0,0,0,0,0,0,0,0,0};
 float rawLat[size] = {0,0,0,0,0,0,0,0,0,0};
 float rawLng[size] = {0,0,0,0,0,0,0,0,0,0};
+float prev_latitude;
+float prev_longitude;
+String intersect_str = "      ";
+
 
 struct point { float x, y; };
 struct line  { struct point p1, p2; };
@@ -32,7 +38,6 @@ unsigned long last = 0UL;
 
 
   String filename = "/LOGGER00.CSV";
-  String filenameXY = "/LOGGER00XY.CSV";
   String dataToWrite = "";
 
  File logfile;
@@ -77,7 +82,7 @@ if (dataToWrite != "")
 else{
   logfile = SD.open(filename, FILE_WRITE );
     if (logfile){
-      logfile.println("DATE,TIME,AGE,LAT,LATM,LNG,LNGM,HDOP,COURSE,SPEED,SPEEDM,ALTITUDE,SAT");
+      logfile.println("DATE,TIME,AGE,LAT,LATM,LNG,LNGM,HDOP,COURSE,SPEED,SPEEDM,ALTITUDE,SAT,INTERSECT");
       logfile.println(dataToWrite);
       logfile.close(); // close the file
       dataToWrite = "";
@@ -146,16 +151,38 @@ void setup()
 void loop()
 {
 
-float prev_latitude;
-float prev_longitude;
-  
+
 line l1;
 line l2;
+line l3;
+line l4;
+line l5;
 
 l1.p1.x = 41.93713;
 l1.p1.y = 12.529524;
 l1.p2.x = 41.9367835;
 l1.p2.y = 12.5313038;
+
+// viale ionio 41.945960, 12.531180 -- 41.945481, 12.531126
+l3.p1.x = 41.945960;
+l3.p1.y = 12.531180;
+l3.p2.x = 41.945481;
+l3.p2.y = 12.531126;
+
+// via delle vigne nuove 41.952806, 12.535804 -- 41.952917, 12.536549
+l4.p1.x = 41.952806;
+l4.p1.y = 12.535804;
+l4.p2.x = 41.952917;
+l4.p2.y = 12.536549;
+
+// casa 41.969688, 12.532461 -- 41.969800, 12.532651
+l5.p1.x = 41.969688;
+l5.p1.y = 12.532461;
+l5.p2.x = 41.969800;
+l5.p2.y = 12.532651;
+
+
+
 
 
   M5.update();  
@@ -180,7 +207,7 @@ l1.p2.y = 12.5313038;
     M5.Lcd.print(F(" - LNG: "));
     M5.Lcd.println(gps.location.lng(), 6);
        
-    if (gps.location.age()<30)
+    if (gps.location.age()<50)
     {
       Index++;
       if (Index>=size)
@@ -196,8 +223,8 @@ l1.p2.y = 12.5313038;
 
       if (Index==0)
         {
-          float prev_latitude = latitude.getAverage();
-          float prev_longitude = longitude.getAverage();
+          prev_latitude = latitude.getAverage();
+          prev_longitude = longitude.getAverage();
         }
   
 
@@ -206,8 +233,18 @@ l1.p2.y = 12.5313038;
       l2.p1.y = prev_longitude;
       l2.p2.x = latitude.getAverage();
       l2.p2.y = longitude.getAverage();
+
+      
+      if (intersect(l2,l1) == 1)
+        intersect_str = "int_L1";
+      else if (intersect(l2,l3) == 1)
+        intersect_str = "int_L3";
+      else if (intersect(l2,l4) == 1)
+        intersect_str = "int_L4";
+      else if (intersect(l2,l5) == 1)
+        intersect_str = "int_L5";
        
-      dataToWrite = String(gps.date.value())+","+String(gps.time.value()) + ","+String(gps.location.age())+"," + String(gps.location.lat(),6) +"," + String(latitude.getAverage(),6) + "," + String(gps.location.lng(),6) + "," + String(longitude.getAverage(),6) + "," + String(gps.hdop.hdop()) + "," + String(gps.course.deg()) + "," +String(gps.speed.kmph())+"," + String(velocity.getAverage()) +","+String(gps.altitude.meters())+","+String(gps.satellites.value())+"," + String(intersect(l2,l1)) ;
+      dataToWrite = String(gps.date.value())+","+String(gps.time.value()) + ","+String(gps.location.age())+"," + String(gps.location.lat(),6) +"," + String(latitude.getAverage(),6) + "," + String(gps.location.lng(),6) + "," + String(longitude.getAverage(),6) + "," + String(gps.hdop.hdop()) + "," + String(gps.course.deg()) + "," +String(gps.speed.kmph())+"," + String(velocity.getAverage()) +","+String(gps.altitude.meters())+","+String(gps.satellites.value())+"," + intersect_str ;
       M5.Lcd.setCursor(0, 190);
       M5.Lcd.println(dataToWrite);
       saveData();
@@ -228,7 +265,7 @@ l1.p2.y = 12.5313038;
     M5.Lcd.print(gps.date.month());
     M5.Lcd.print(F("/"));
     M5.Lcd.println(gps.date.day());
-    filename = "/"+String(gps.date.value())+".CSV";
+    filename = "/"+String(gps.date.value())+"_"+String(random(0,999)) + ".CSV";
   }
 
  if (gps.time.isUpdated())

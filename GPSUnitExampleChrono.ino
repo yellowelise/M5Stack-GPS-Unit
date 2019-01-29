@@ -1,7 +1,12 @@
 #include <M5Stack.h>
 #include <TinyGPS++.h>
+#include <Math.h>
+
 #define M5STACKFIRE_SPEAKER_PIN 25 // speaker DAC, only 8 Bit
 #include "Array.h"
+//41.93713,12.529524
+//41.9367835,12.5313038
+//fine viale tirreno
 
 static const uint32_t GPSBaud = 9600;
 TinyGPSPlus gps;
@@ -14,6 +19,8 @@ float rawLng[size] = {0,0,0,0,0,0,0,0,0,0};
 
 struct point { float x, y; };
 struct line  { struct point p1, p2; };
+
+
 
 // The serial connection to the GPS device
 HardwareSerial ss(2);
@@ -138,6 +145,19 @@ void setup()
 
 void loop()
 {
+
+float prev_latitude;
+float prev_longitude;
+  
+line l1;
+line l2;
+
+l1.p1.x = 41.93713;
+l1.p1.y = 12.529524;
+l1.p2.x = 41.9367835;
+l1.p2.y = 12.5313038;
+
+
   M5.update();  
   if (M5.BtnA.pressedFor(700))
     M5.powerOFF();
@@ -164,7 +184,7 @@ void loop()
     {
       Index++;
       if (Index>=size)
-        Index = 0;
+          Index = 0;
   
       rawVel[Index] =  gps.speed.kmph();
       rawLat[Index] =  gps.location.lat();
@@ -173,11 +193,25 @@ void loop()
       Array<float> velocity = Array<float>(rawVel,size);
       Array<float> latitude = Array<float>(rawLat,size);
       Array<float> longitude = Array<float>(rawLng,size);
+
+      if (Index==0)
+        {
+          float prev_latitude = latitude.getAverage();
+          float prev_longitude = longitude.getAverage();
+        }
+  
+
+
+      l2.p1.x = prev_latitude;
+      l2.p1.y = prev_longitude;
+      l2.p2.x = latitude.getAverage();
+      l2.p2.y = longitude.getAverage();
        
-      dataToWrite = String(gps.date.value())+","+String(gps.time.value()) + ","+String(gps.location.age())+"," + String(gps.location.lat(),6) +"," + String(latitude.getAverage(),6) + "," + String(gps.location.lng(),6) + "," + String(longitude.getAverage(),6) + "," + String(gps.hdop.hdop()) + "," + String(gps.course.deg()) + "," +String(gps.speed.kmph())+"," + String(velocity.getAverage()) +","+String(gps.altitude.meters())+","+String(gps.satellites.value());
+      dataToWrite = String(gps.date.value())+","+String(gps.time.value()) + ","+String(gps.location.age())+"," + String(gps.location.lat(),6) +"," + String(latitude.getAverage(),6) + "," + String(gps.location.lng(),6) + "," + String(longitude.getAverage(),6) + "," + String(gps.hdop.hdop()) + "," + String(gps.course.deg()) + "," +String(gps.speed.kmph())+"," + String(velocity.getAverage()) +","+String(gps.altitude.meters())+","+String(gps.satellites.value())+"," + String(intersect(l2,l1)) ;
       M5.Lcd.setCursor(0, 190);
       M5.Lcd.println(dataToWrite);
       saveData();
+      
     }
   }
 

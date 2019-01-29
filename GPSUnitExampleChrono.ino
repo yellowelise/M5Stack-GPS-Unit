@@ -1,6 +1,6 @@
 #include <M5Stack.h>
 #include <TinyGPS++.h>
-#include <Math.h>
+//#include <Math.h>
 
 #define M5STACKFIRE_SPEAKER_PIN 25 // speaker DAC, only 8 Bit
 #include "Array.h"
@@ -102,6 +102,8 @@ void connectToGPS()
   
   ss.begin(GPSBaud);
   delay(1000);
+  M5.Lcd.setCursor(0,0);
+
   M5.Lcd.println(F("Set Baud to 57600..."));
   ss.println("$PCAS01,4*18");//57600
   delay(1000);
@@ -237,11 +239,11 @@ l5.p2.y = 12.532651;
       
       if (intersect(l2,l1) == 1)
         intersect_str = "int_L1";
-      else if (intersect(l2,l3) == 1)
+      if (intersect(l2,l3) == 1)
         intersect_str = "int_L3";
-      else if (intersect(l2,l4) == 1)
+      if (intersect(l2,l4) == 1)
         intersect_str = "int_L4";
-      else if (intersect(l2,l5) == 1)
+      if (intersect(l2,l5) == 1)
         intersect_str = "int_L5";
        
       dataToWrite = String(gps.date.value())+","+String(gps.time.value()) + ","+String(gps.location.age())+"," + String(gps.location.lat(),6) +"," + String(latitude.getAverage(),6) + "," + String(gps.location.lng(),6) + "," + String(longitude.getAverage(),6) + "," + String(gps.hdop.hdop()) + "," + String(gps.course.deg()) + "," +String(gps.speed.kmph())+"," + String(velocity.getAverage()) +","+String(gps.altitude.meters())+","+String(gps.satellites.value())+"," + intersect_str ;
@@ -265,7 +267,7 @@ l5.p2.y = 12.532651;
     M5.Lcd.print(gps.date.month());
     M5.Lcd.print(F("/"));
     M5.Lcd.println(gps.date.day());
-    filename = "/"+String(gps.date.value())+"_"+String(random(0,999)) + ".CSV";
+    filename = "/"+String(gps.date.value()) + ".CSV";
   }
 
  if (gps.time.isUpdated())

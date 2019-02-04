@@ -292,7 +292,7 @@ void loop()
       char dataStr[24];
       sprintf(dataStr, "%0.4i-%0.2i-%0.2i,%0.2i:%0.2i:%0.2i.%0.3i",gps.date.year(),gps.date.month(),gps.date.day(), gps.time.hour(),gps.time.minute(),gps.time.second(),gps.time.centisecond() );
       
-      dataToWrite = String(dataStr) + ","+String(gps.location.age())+"," + String(gps.location.lat(),6) +"," + String(latitude.getAverage(),6) + "," + String(gps.location.lng(),6) + "," + String(longitude.getAverage(),6) + "," + String(gps.hdop.hdop()) + "," + String(gps.course.deg()) + "," +String(gps.speed.kmph())+"," + String(velocity.getAverage()) +","+String(gps.altitude.meters())+","+String(gps.satellites.value())+"," + intersect_str ;
+      dataToWrite = String(dataStr) + ","+String(gps.location.age())+"," + String(gps.location.lat(),8) +"," + String(latitude.getAverage(),8) + "," + String(gps.location.lng(),8) + "," + String(longitude.getAverage(),8) + "," + String(gps.hdop.hdop()) + "," + String(gps.course.deg()) + "," +String(gps.speed.kmph())+"," + String(velocity.getAverage()) +","+String(gps.altitude.meters())+","+String(gps.satellites.value())+"," + intersect_str ;
       
       intersect_str = "      ";
       M5.Lcd.setCursor(0, 50);

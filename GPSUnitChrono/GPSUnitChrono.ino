@@ -91,8 +91,15 @@ else{
 }
 }
 
+/*void drawPos(float lat,float lng)
+{
+  int i_lat = Math.round(Math.round((lat*10000)) /100);
+  int i_lng = Math.round(Math.round((lng*10000)) /100);
 
 
+  
+}
+*/
 
 void connectToGPS()
 {
@@ -178,6 +185,43 @@ l5.p2.y = 12.532651;
 
 }
 
+/*
+
+void writeInfo() { //Write the data to the SD card fomratted for google earth kml
+
+  myFile = SD.open(fileNameChar, FILE_WRITE);
+  if (header == false) { // If the header hasn't been written, write it.
+    if (myFile) {
+      myFile.print(F("<?xml version=\"1.0\" encoding=\"UTF-8\"?> <kml xmlns=\"http://earth.google.com/kml/2.0\"> <document>"));
+      header = true; // header flag set.
+    }
+  }
+  if (myFile) { // write current GPS position data as KML
+    myFile.println(F("<placemark>"));
+    myFile.print(F("<name>"));
+    myFile.print(gps.speed.mph(), 1);
+    myFile.println(F("</name>"));
+    myFile.print(F("<point><coordinates>"));
+    myFile.print(gps.location.lng(), 6);
+    myFile.print(F(","));
+    myFile.print(gps.location.lat(), 6);
+    myFile.println(F("</coordinates></Point></Placemark>"));
+    myFile.close(); // close the file:
+  }
+}
+
+void writeFooter() { // if the record switch is now set to off, write the kml footer, and reset the header flag
+  myFile = SD.open(fileNameChar, FILE_WRITE);
+  header = false;
+  if (myFile) {
+    myFile.println(F("</Document>"));
+    myFile.println (F("</kml>"));
+    myFile.close ();
+  }
+}
+
+*/
+
 
 void loop()
 {
@@ -243,8 +287,12 @@ void loop()
         intersect_str = "int_L4";
       if (intersect(l2,l5) == 1)
         intersect_str = "int_L5";
-       
-      dataToWrite = String(gps.date.value())+","+String(gps.time.value()) + ","+String(gps.location.age())+"," + String(gps.location.lat(),8) +"," + String(latitude.getAverage(),8) + "," + String(gps.location.lng(),8) + "," + String(longitude.getAverage(),8) + "," + String(gps.hdop.hdop()) + "," + String(gps.course.deg()) + "," +String(gps.speed.kmph())+"," + String(velocity.getAverage()) +","+String(gps.altitude.meters())+","+String(gps.satellites.value())+"," + intersect_str ;
+
+
+      char dataStr[24];
+      sprintf(dataStr, "%0.4i-%0.2i-%0.2i,%0.2i:%0.2i:%0.2i.%0.3i",gps.date.year(),gps.date.month(),gps.date.day(), gps.time.hour(),gps.time.minute(),gps.time.second(),gps.time.centisecond() );
+      
+      dataToWrite = String(dataStr) + ","+String(gps.location.age())+"," + String(gps.location.lat(),6) +"," + String(latitude.getAverage(),6) + "," + String(gps.location.lng(),6) + "," + String(longitude.getAverage(),6) + "," + String(gps.hdop.hdop()) + "," + String(gps.course.deg()) + "," +String(gps.speed.kmph())+"," + String(velocity.getAverage()) +","+String(gps.altitude.meters())+","+String(gps.satellites.value())+"," + intersect_str ;
       
       intersect_str = "      ";
       M5.Lcd.setCursor(0, 50);

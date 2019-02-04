@@ -37,7 +37,7 @@ unsigned long last = 0UL;
 
 
 
-  String filename = "/LOGGER00.CSV";
+  String filename = "";
   String dataToWrite = "";
 
  File logfile;
@@ -289,8 +289,8 @@ void loop()
         intersect_str = "int_L5";
 
 
-      char dataStr[24];
-      sprintf(dataStr, "%0.4i-%0.2i-%0.2i,%0.2i:%0.2i:%0.2i.%0.3i",gps.date.year(),gps.date.month(),gps.date.day(), gps.time.hour(),gps.time.minute(),gps.time.second(),gps.time.centisecond() );
+      char dataStr[23];
+      sprintf(dataStr, "%0.4i-%0.2i-%0.2i,%0.2i:%0.2i:%0.2i.%0.2i",gps.date.year(),gps.date.month(),gps.date.day(), gps.time.hour(),gps.time.minute(),gps.time.second(),gps.time.centisecond() );
       
       dataToWrite = String(dataStr) + ","+String(gps.location.age())+"," + String(gps.location.lat(),8) +"," + String(latitude.getAverage(),8) + "," + String(gps.location.lng(),8) + "," + String(longitude.getAverage(),8) + "," + String(gps.hdop.hdop()) + "," + String(gps.course.deg()) + "," +String(gps.speed.kmph())+"," + String(velocity.getAverage()) +","+String(gps.altitude.meters())+","+String(gps.satellites.value())+"," + intersect_str ;
       
@@ -315,7 +315,8 @@ void loop()
     M5.Lcd.print(gps.date.month());
     M5.Lcd.print(F("/"));
     M5.Lcd.println(gps.date.day());
-    filename = "/"+String(gps.date.value()) + ".CSV";
+    if (filename == "")
+      filename = "/"+String(gps.date.value()) +"_" + String(gps.time.value()) + ".CSV";
   }
 
  if (gps.time.isUpdated())
